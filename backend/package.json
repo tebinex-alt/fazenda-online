@@ -1,0 +1,9 @@
+{
+  "name": "fazenda-real-backend",
+  "version": "1.0.0",
+  "description": "Backend do jogo Fazenda Real — servidor Node.js puro, sem dependências externas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
