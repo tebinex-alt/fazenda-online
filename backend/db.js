@@ -154,4 +154,24 @@ function cleanupSessions(){
 cleanupSessions();
 setInterval(cleanupSessions, 3600 * 1000).unref();
 
-module.exports = { db, stmt, DB_FILE };
+/* ---------- checkpoint periódico do WAL ----------
+   Em modo WAL, as escritas ficam em fazenda.db-wal e só são regravadas
+   no arquivo principal (fazenda.db) num checkpoint. Sem isso, o -wal
+   cresce sem limite e um backup que copie o .db sem copiar o .db-wal/.db-shm
+   no mesmo instante gera um banco inconsistente (corrupção ao reabrir).
+   PASSIVE não bloqueia leitores/escritores atuais. */
+function checkpointWal(){
+  try{ db.exec('PRAGMA wal_checkpoint(PASSIVE);'); }catch(e){ console.error('[db] checkpoint falhou:', e.message); }
+}
+setInterval(checkpointWal, 5 * 60 * 1000).unref();
+
+/* Fechamento gracioso: garante checkpoint completo (TRUNCATE) e fecha o
+   arquivo corretamente antes do processo sair, para nunca deixar o .db
+   e o .db-wal fora de sincronia. Chamado pelo server.js nos handlers
+   de SIGINT/SIGTERM. */
+function closeDb(){
+  try{ db.exec('PRAGMA wal_checkpoint(TRUNCATE);'); }catch(e){ console.error('[db] checkpoint final falhou:', e.message); }
+  try{ db.close(); }catch(e){ /* já fechado */ }
+}
+
+module.exports = { db, stmt, DB_FILE, closeDb };

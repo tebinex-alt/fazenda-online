@@ -10,7 +10,7 @@ const path = require('path');
 const url = require('url');
 const { apiLimiter } = require('./ratelimit');
 const { route } = require('./routes');
-const { DB_FILE } = require('./db');
+const { DB_FILE, closeDb } = require('./db');
 
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
@@ -50,3 +50,20 @@ server.listen(PORT, ()=>{
   console.log(`Fazenda Real rodando em http://localhost:${PORT}`);
   console.log(`Banco SQLite: ${DB_FILE}`);
 });
+
+/* ---------- encerramento gracioso ----------
+   Sem isso, um `kill`/deploy/restart pode encerrar o processo com o WAL
+   ainda não sincronizado com o .db — foi exatamente o que corrompeu o
+   fazenda.db anterior. server.close() para de aceitar novas conexões;
+   closeDb() força o checkpoint final e fecha o arquivo com segurança. */
+function shutdown(signal){
+  console.log(`[server] ${signal} recebido, encerrando...`);
+  server.close(()=>{
+    closeDb();
+    process.exit(0);
+  });
+  // se algo travar, força saída depois de 5s
+  setTimeout(()=>process.exit(1), 5000).unref();
+}
+process.on('SIGINT', ()=>shutdown('SIGINT'));
+process.on('SIGTERM', ()=>shutdown('SIGTERM'));
