@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fazenda Real — Do Zero ao Império</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+
+  <header class="topbar">
+    <div class="brand">🐔<span>Fazenda Real</span></div>
+    <div class="resources">
+      <div class="res" title="Dinheiro">💰 <span id="res-money">0</span></div>
+      <div class="res" title="Ovos armazenados">🥚 <span id="res-eggs">0</span><span class="cap" id="res-eggs-cap"></span></div>
+      <div class="res" title="Ração armazenada">🌾 <span id="res-feed">0</span><span class="cap" id="res-feed-cap"></span></div>
+    </div>
+    <div class="tier-badge" id="tier-badge">Miserável</div>
+    <div class="activity-badge" id="activity-badge" title="Bônus de Atividade: produzir e interagir com o jogo aberto aumenta sua produção">⚡ 0%</div>
+    <button class="logout-btn" id="sfx-toggle" title="Som ligado (clique p/ desligar)" style="display:none;">🔊</button>
+    <button class="logout-btn" id="user-btn" style="display:none;" onclick="handleLogout()" title="Sair da conta">🚪 Sair</button>
+  </header>
+
+  <div class="scene-wrap">
+    <div class="scene stage-0" id="scene"></div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="overview">🏡 Visão Geral</button>
+    <button class="tab" data-tab="coop">🐓 Galinheiro</button>
+    <button class="tab" data-tab="plantation">🌱 Plantação</button>
+    <button class="tab" data-tab="shop">🛒 Loja</button>
+    <button class="tab" data-tab="breed">💞 Cruza</button>
+    <button class="tab" data-tab="incubator">🥚 Incubadora</button>
+    <button class="tab" data-tab="fighters">🐓‍🔥 Aviário de Combate</button>
+    <button class="tab" data-tab="arena">🏆 Arena</button>
+    <button class="tab" data-tab="online">🌍 Online</button>
+  </nav>
+
+  <main id="main-content"></main>
+
+  <div class="footer-note">Progresso salvo automaticamente neste navegador · Fazenda Real</div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Tela de Login/Registro -->
+<div id="auth-overlay" class="auth-overlay hidden" data-mode="login">
+  <div class="auth-box">
+    <h2 id="auth-title">🐔 Fazenda Real</h2>
+    <p id="auth-subtitle" class="sub">Entre para continuar sua fazenda ou crie uma conta nova.</p>
+    <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+      <label for="auth-username">Usuário</label>
+      <input id="auth-username" class="auth-input" autocomplete="username" required
+             pattern="[A-Za-z0-9_]{3,20}" title="3 a 20 caracteres: letras, números ou _">
+      <label for="auth-password">Senha</label>
+      <input id="auth-password" type="password" class="auth-input" autocomplete="current-password"
+             required minlength="8">
+      <div id="auth-claim-wrap" style="display:none;">
+        <label for="auth-claim">Código do seu save antigo (opcional)</label>
+        <input id="auth-claim" class="auth-input" placeholder="ex.: u_x2lb8x61msgo8718">
+        <div class="auth-hint">Se você já jogava, cole aqui o código do seu navegador para recuperar sua fazenda. (Veja como obter: abra o Console e digite <code>getUserId()</code>)</div>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+      <button type="submit" class="auth-btn" id="auth-submit">Entrar</button>
+    </form>
+    <button class="auth-toggle" onclick="toggleAuthMode()" id="auth-toggle">Criar conta nova</button>
+  </div>
+</div>
+
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="icon" id="confirm-icon">🤔</div>
+    <h3 id="confirm-title">Confirmar ação</h3>
+    <p id="confirm-text"></p>
+    <div class="confirm-actions">
+      <button class="no" id="confirm-no">Cancelar</button>
+      <button class="yes" id="confirm-yes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Renomear Galo Overlay -->
+<div id="rename-overlay">
+  <div class="rename-box">
+    <h3>✏️ Renomear Galo</h3>
+    <p class="sub">O nome aparece na árvore genealógica e nas lutas.</p>
+    <input id="rename-input" class="rename-input" maxlength="16" placeholder="Nome do galo" autocomplete="off">
+    <div class="confirm-actions">
+      <button class="no" id="rename-cancel">Cancelar</button>
+      <button class="yes" id="rename-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Arena Animation Overlay (tela grande: canvas PIXI + barras de vida DOM) -->
+<div id="arena-overlay">
+  <div class="arena-box arena-box-big">
+    <div id="arena-scene" class="arena-scene"></div>
+    <div class="arena-result" id="arena-result">...</div>
+  </div>
+</div>
+
+<!-- Árvore Genealógica Overlay -->
+<div id="genealogy-overlay">
+  <div class="genealogy-box">
+    <button class="no" id="genealogy-close" style="float:right;">Fechar</button>
+    <h3>🌳 Árvore Genealógica</h3>
+    <div id="genealogy-content"></div>
+  </div>
+</div>
+
+<script src="js/storage-client.js"></script>
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/persistence.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/multiplayer.js"></script>
+<script src="js/audio.js"></script>
+<script>
+/* Carrega o PixiJS tentando alguns CDNs em sequência — algumas redes
+   (firewall corporativo/escolar, certos provedores) bloqueiam um CDN
+   específico mas liberam outro. Se os 3 falharem, a cena mostra um aviso
+   em vez de ficar em branco (ver a cadeia CDN e o fallback em ui.js). */
+(function(){
+  var sources = [
+    'https://cdn.jsdelivr.net/npm/pixi.js-legacy@7.4.2/dist/pixi-legacy.min.js',
+    'https://unpkg.com/pixi.js-legacy@7.4.2/dist/pixi-legacy.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js'
+  ];
+  var i = 0;
+  function tryNext(){
+    if(i >= sources.length){ window.__pixiCdnFailed = true; return; }
+    var s = document.createElement('script');
+    s.src = sources[i++];
+    s.onerror = tryNext;
+    document.head.appendChild(s);
+  }
+  tryNext();
+})();
+</script>
+<script src="js/scene-iso.js"></script>
+<script src="js/arena-scene.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/events.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
