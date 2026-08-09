@@ -224,80 +224,190 @@ button.action.ghost{background:transparent; border:2px solid var(--soil-dark); c
 .cage.ready{background:linear-gradient(180deg,#a9d99a,#7fae5c); animation:pulse 1.4s ease-in-out infinite; cursor:pointer;}
 .cage .emoji{font-size:1.9rem;}
 
-/* grid de cards de galo: colunas mais largas para o verso (ações) respirar */
-.grid-fighters{grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); align-items:stretch;}
-.fighter-card.chosen{border-color:var(--gold); background:#FFF6DE;}
-.fighter-card.phenomenal{border-color:#b8860b; border-width:3px; background:linear-gradient(135deg,#FFF9E6,#FFE9B0); box-shadow:0 0 12px rgba(184,134,11,.45);}
-.fc-phenomenal{font-weight:800; color:#b8860b; text-align:center; margin-bottom:4px;}
-.fc-phenomenal span{font-weight:600; font-size:.72rem; display:block;}
-.fc-stars{text-align:center; font-size:1.1rem; color:var(--gold,#c99a2e); letter-spacing:2px; margin:2px 0;}
-.fc-lineage{text-align:center; font-weight:700; font-size:.82rem; color:var(--soil-dark); margin-bottom:8px;}
-.fc-meta{display:flex; gap:6px; margin:10px 0; text-align:center; flex-wrap:wrap;}
-.fc-meta-item{flex:1; background:#FFFBF2; border:1px solid var(--wood-dark); border-radius:8px; padding:6px 2px;}
-.fc-meta-label{display:block; font-size:.62rem; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft);}
-.fc-meta-value{display:block; font-weight:800; font-size:.82rem; margin-top:2px;}
-/* ---------- CARD FRENTE/VERSO ---------- */
-.fc-flip{perspective:1400px; cursor:pointer; user-select:none; -webkit-user-select:none;
-  transition:transform .18s ease, box-shadow .3s ease;
-  display:flex; height:100%; /* estica a carta na célula da grid */}
-.fc-flip:hover{box-shadow:0 10px 22px rgba(46,36,24,.28);}
-.fc-flip:active{transform:scale(.98);}
-.fc-flip .fc-inner{
-  display:grid; grid-template-areas:"face"; transform-style:preserve-3d;
-  transition:transform .65s cubic-bezier(.4,.05,.25,1); position:relative;
-  will-change:transform; width:100%; flex:1; align-self:stretch;
-}
-.fc-flip .fc-front, .fc-flip .fc-back{
-  grid-area:face; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-  display:flex; flex-direction:column; gap:8px; border-radius:12px; flex:1;
-  padding:14px 12px 10px; box-sizing:border-box;
-}
-.fc-flip .fc-back{transform:rotateY(180deg);}
-.fc-flip.flipped .fc-inner{transform:rotateY(180deg);}
-.fc-hint{font-size:.62rem; color:var(--ink-soft); text-align:center; margin-top:6px; opacity:.75;}
-.fc-gender{font-size:.72rem; font-weight:700; color:var(--ink-soft); text-align:center;}
-/* ---- Arte do card: frente ---- */
-.fc-front{
-  position:relative;
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(255,209,102,.35), transparent 60%),
-    linear-gradient(180deg, #FFF9E8, #FBF2DE);
-  border-bottom:3px solid var(--gold);
-}
-/* brilho que varre a frente de vez em quando (fica dentro do card pelo radius) */
-.fc-front::after{
-  content:''; position:absolute; top:-20%; left:-80%; width:50%; height:140%; transform:rotate(12deg);
-  background:linear-gradient(105deg, transparent, rgba(255,255,255,.5), transparent);
-  animation:fc-shine 4.5s ease-in-out infinite; pointer-events:none;
-  border-radius:inherit;
-}
-@keyframes fc-shine{0%,55%{left:-80%;} 80%,100%{left:135%;}}
-/* fundos por linhagem (classe aplicada no .fc-flip) */
-.fc-flip.fc-ln-selecionada .fc-front{background:radial-gradient(ellipse at 50% -10%, rgba(92,140,92,.32), transparent 60%), linear-gradient(180deg,#F4FAEE,#E9F3E0); border-bottom-color:#5B8C51;}
-.fc-flip.fc-ln-elite .fc-front{background:radial-gradient(ellipse at 50% -10%, rgba(102,198,217,.32), transparent 60%), linear-gradient(180deg,#EFF9FB,#DDEFF4); border-bottom-color:#66C6D9;}
-.fc-flip.fc-ln-imperial .fc-front{background:radial-gradient(ellipse at 50% -10%, rgba(232,169,58,.5), transparent 60%), linear-gradient(180deg,#FFF3D6,#FBE6B9); border-bottom-color:#E8A93A;}
-.fc-flip.fc-ln-mitica .fc-front{background:radial-gradient(ellipse at 50% -10%, rgba(255,124,209,.32), transparent 60%), linear-gradient(180deg,#FDF0FA,#F5DDF1); border-bottom-color:#FF7CD1;}
-.fc-front .badge-emoji{font-size:2.4rem; filter:drop-shadow(0 3px 4px rgba(46,36,24,.35)); animation:fc-bob 2.4s ease-in-out infinite;}
-.fc-front h3{font-size:1.02rem; color:var(--soil-dark); text-shadow:0 1px 0 rgba(255,255,255,.6);}
-.fc-front .fc-stars{color:var(--gold); text-shadow:0 0 6px rgba(232,169,58,.5);}
-.fc-front .fc-lineage{font-weight:800; color:var(--wood-dark);}
-.fc-front .stat-fill{transition:width .8s cubic-bezier(.3,.8,.3,1);}
-@keyframes fc-bob{0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-3px) rotate(-2deg);}}
-/* ---- Verso: fundo mais escuro, foco em dados/ações ---- */
-.fc-back{
-  background:linear-gradient(180deg, #F3E6C8, #E9DFC2);
-  border-top:3px solid var(--wood-dark);
-}
-.fc-back .fc-meta-item{background:#FFFBF2; border-color:var(--wood-dark);}
-.fc-back > *{flex-shrink:0;}
-.fc-back .desc{margin:2px 0 4px;}
-.fc-back button.action{width:100%;}
+/* stat-line antiga: ainda usada fora do card de galo (ex: comparativo de
+   raças na loja do aviário), mantida como está. */
 .stat-line{display:flex; align-items:center; gap:8px; font-size:.72rem; font-family:var(--font-mono); margin:2px 0;}
 .stat-line span:first-child{width:74px; flex-shrink:0; font-family:var(--font-body); font-weight:700; text-align:left;}
 .stat-track{flex:1; min-width:0; height:8px; background:var(--paper-2); border-radius:5px; overflow:hidden; border:1px solid var(--line); position:relative;}
 .stat-fill{height:100%; background:linear-gradient(90deg, var(--barn-red), var(--gold-bright)); position:relative; z-index:1;}
 .stat-cap{position:absolute; top:-1px; bottom:-1px; width:2px; background:var(--soil-dark); z-index:2;}
 .stat-num{width:26px; text-align:right; flex-shrink:0;}
+
+/* =========================================================
+   CARD DE GALO DE COMBATE — estilo "card de batalha" (TCG)
+   ---------------------------------------------------------
+   Proporção fixa (~5:7, como uma carta física) em vez de esticar pra
+   preencher a linha da grade — é isso que fazia o card antigo ficar
+   comprido e estreito. Zonas bem definidas: faixa de linhagem no topo,
+   medalhão de retrato, placa de nome, grade 2×2 de atributos na frente;
+   metadados + cartel + ações em grade de ícones no verso.
+========================================================= */
+:root{
+  --ln-comum:#8a7a5c; --ln-selecionada:#5B8C51; --ln-elite:#66C6D9;
+  --ln-imperial:#E8A93A; --ln-mitica:#FF7CD1;
+}
+.grid-fighters{
+  grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+  align-items:start; justify-items:center;
+}
+.fighter-card.chosen{border-color:var(--gold); background:#FFF6DE;}
+.fighter-card.phenomenal{border-color:#b8860b; border-width:3px; background:linear-gradient(135deg,#FFF9E6,#FFE9B0); box-shadow:0 0 14px rgba(184,134,11,.4);}
+
+.fc-flip{
+  perspective:1600px; cursor:pointer; user-select:none; -webkit-user-select:none;
+  transition:transform .18s ease, box-shadow .3s ease;
+  width:100%; max-width:240px; aspect-ratio:5/7.4;
+  --ln-color: var(--ln-comum);
+}
+.fc-flip:hover{transform:translateY(-3px); box-shadow:0 14px 26px rgba(46,36,24,.32);}
+.fc-flip:active{transform:translateY(-1px) scale(.985);}
+.fc-flip.fc-ln-selecionada{--ln-color: var(--ln-selecionada);}
+.fc-flip.fc-ln-elite{--ln-color: var(--ln-elite);}
+.fc-flip.fc-ln-imperial{--ln-color: var(--ln-imperial);}
+.fc-flip.fc-ln-mitica{--ln-color: var(--ln-mitica);}
+
+.fc-flip .fc-inner{
+  display:grid; grid-template-areas:"face"; transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.4,.05,.25,1); position:relative;
+  will-change:transform; width:100%; height:100%;
+}
+.fc-flip .fc-front, .fc-flip .fc-back{
+  grid-area:face; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  display:flex; flex-direction:column; border-radius:16px; height:100%;
+  box-sizing:border-box; overflow:hidden;
+}
+.fc-flip .fc-back{transform:rotateY(180deg);}
+.fc-flip.flipped .fc-inner{transform:rotateY(180deg);}
+.fc-hint{font-size:.6rem; color:var(--ink-soft); text-align:center; padding:3px 0 6px; opacity:.7; flex-shrink:0;}
+
+/* ---- moldura ornamentada (dupla borda: ouro fino por fora, cor da
+   linhagem por dentro) ---- */
+.fc-front, .fc-back{
+  border:2px solid var(--ln-color);
+  box-shadow:
+    inset 0 0 0 3px #fff8e8,
+    inset 0 0 0 5px var(--ln-color);
+}
+
+/* ---- FRENTE ---- */
+.fc-front{
+  position:relative;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--ln-color) 28%, transparent), transparent 62%),
+    linear-gradient(180deg, #FFFBF0, #FBF2DE 70%, #F3E6C8);
+  padding:8px 8px 10px;
+  gap:4px;
+}
+.fc-front::after{
+  content:''; position:absolute; top:-20%; left:-80%; width:45%; height:140%; transform:rotate(12deg);
+  background:linear-gradient(105deg, transparent, rgba(255,255,255,.55), transparent);
+  animation:fc-shine 5s ease-in-out infinite; pointer-events:none;
+}
+@keyframes fc-shine{0%,55%{left:-80%;} 80%,100%{left:135%;}}
+
+/* faixa de linhagem — canto superior esquerdo, estilo galhardete */
+.fc-ribbon{
+  position:absolute; top:10px; left:-6px; z-index:3;
+  background:var(--ln-color); color:#fff; font-family:var(--font-display); font-weight:700;
+  font-size:.62rem; letter-spacing:.02em; padding:3px 10px 3px 12px;
+  box-shadow:0 2px 4px rgba(0,0,0,.25);
+  clip-path:polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
+}
+.fc-phenomenal-tag{
+  position:absolute; top:10px; right:8px; z-index:3;
+  background:linear-gradient(135deg,#b8860b,#e8c23a); color:#fff;
+  font-size:.6rem; font-weight:800; padding:3px 7px; border-radius:20px;
+  box-shadow:0 2px 5px rgba(184,134,11,.5);
+}
+
+/* medalhão de retrato */
+.fc-portrait{display:flex; justify-content:center; align-items:center; margin-top:20px; flex-shrink:0;}
+.fc-portrait-ring{
+  width:74px; height:74px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 50% 35%, #fff, #FFF3D6 70%);
+  border:3px solid var(--ln-color);
+  box-shadow:0 0 0 3px #fff, 0 0 14px color-mix(in srgb, var(--ln-color) 55%, transparent), inset 0 2px 4px rgba(255,255,255,.8);
+}
+.fc-portrait-emoji{font-size:2.5rem; filter:drop-shadow(0 3px 3px rgba(46,36,24,.3)); animation:fc-bob 2.6s ease-in-out infinite;}
+@keyframes fc-bob{0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-3px) rotate(-3deg);}}
+
+/* placa de nome */
+.fc-nameplate{text-align:center; flex-shrink:0; margin:2px 0 4px;}
+.fc-nameplate h3{
+  margin:0; font-family:var(--font-display); font-size:.92rem; line-height:1.15;
+  color:var(--soil-dark); text-shadow:0 1px 0 rgba(255,255,255,.7);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px;
+}
+.fc-subrow{display:flex; align-items:center; justify-content:center; gap:6px; margin-top:2px; flex-wrap:wrap;}
+.fc-gender-tag{font-size:.6rem; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em;}
+.fc-stars{font-size:.78rem; color:var(--gold); letter-spacing:1px; text-shadow:0 0 5px rgba(232,169,58,.5);}
+.fc-breeder-tag{font-size:.78rem;}
+
+/* grade 2×2 de atributos — o coração da reorganização: em vez de 4 barras
+   full-width empilhadas (o que deixava o card comprido), cada atributo vira
+   uma "gema" compacta com ícone, valor e uma barrinha fina embaixo. */
+.fc-stat-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:5px;
+  margin-top:auto; padding-top:6px; flex-shrink:0;
+}
+.fc-stat-gem{
+  background:rgba(255,255,255,.55); border:1px solid var(--line); border-radius:8px;
+  padding:4px 6px 5px;
+}
+.fc-gem-head{display:flex; align-items:center; gap:3px; font-size:.6rem; margin-bottom:3px;}
+.fc-gem-icon{font-size:.72rem; flex-shrink:0;}
+.fc-gem-label{flex:1; font-weight:700; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.fc-gem-val{font-family:var(--font-mono); font-weight:700; color:var(--ink);}
+.fc-gem-track{height:5px; background:var(--paper-2); border-radius:4px; overflow:hidden; border:1px solid var(--line); position:relative;}
+.fc-gem-fill{height:100%; background:linear-gradient(90deg, var(--barn-red), var(--gold-bright)); transition:width .8s cubic-bezier(.3,.8,.3,1);}
+.fc-gem-cap{position:absolute; top:-1px; bottom:-1px; width:2px; background:var(--soil-dark); z-index:2;}
+
+/* ---- VERSO ---- */
+.fc-back{
+  background:linear-gradient(180deg, #F6ECD4, #EBDFC0);
+  padding:10px 10px 8px;
+  gap:6px; overflow-y:auto;
+}
+.fc-back > *{flex-shrink:0;}
+.fc-meta{display:flex; gap:5px; text-align:center; flex-wrap:wrap;}
+.fc-meta-item{flex:1; min-width:56px; background:#FFFBF2; border:1px solid var(--ln-color); border-radius:7px; padding:4px 2px;}
+.fc-meta-label{display:block; font-size:.58rem; text-transform:uppercase; letter-spacing:.02em; color:var(--ink-soft);}
+.fc-meta-value{display:block; font-weight:800; font-size:.76rem; margin-top:1px;}
+
+.fc-record{
+  text-align:center; font-family:var(--font-mono); font-size:.72rem; font-weight:700;
+  background:#fff; border:1px solid var(--line); border-radius:8px; padding:5px 4px;
+  color:var(--ink-soft);
+}
+.fc-power{margin-left:6px; color:var(--wood-dark);}
+.fc-status{text-align:center; font-size:.68rem; color:var(--ink-soft); font-style:italic;}
+.fc-sell-hint{text-align:center; font-size:.62rem; color:var(--ink-soft); margin-top:-2px;}
+
+.fc-section-label{
+  font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+  color:var(--ink-soft); text-align:center; margin-top:2px;
+}
+
+.fc-back button.action{width:100%; font-size:.78rem; padding:8px 6px;}
+
+/* grade de ações em ícone — substitui a lista de 5 botões full-width
+   empilhados por uma grade compacta 4-por-linha. */
+.fc-icon-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:4px;}
+.fc-icon-btn{
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  background:#fff; border:1.5px solid var(--wood-dark); border-radius:8px;
+  padding:5px 2px; cursor:pointer; transition:.15s; font-family:var(--font-body);
+}
+.fc-icon-btn:hover{background:var(--paper-2); transform:translateY(-1px);}
+.fc-icon-btn:active{transform:translateY(1px) scale(.96);}
+.fc-icon-btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+.fc-icon-btn-ico{font-size:.9rem; line-height:1;}
+.fc-icon-btn-txt{font-size:.52rem; font-weight:700; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+
+@media (max-width:520px){
+  .fc-flip{max-width:100%;}
+}
 .select-chip{
   border:2px solid var(--line); border-radius:10px; padding:7px 10px; cursor:pointer; font-size:.82rem;
   font-family:var(--font-body); font-weight:700; background:#fff;

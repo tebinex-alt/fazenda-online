@@ -267,23 +267,55 @@ function statBar(label, value, cap){
   return `<div class="stat-line"><span>${label}</span><div class="stat-track">${capMark}<div class="stat-fill" style="width:${value}%"></div></div><span class="stat-num">${value}</span></div>`;
 }
 
-/* --- Etapa 10: card de galo FRENTE/VERSO ---
-   Frente: nome, estrelas, linhagem, status e gênero (o que o jogador quer ver
-   de relance). Verso: o resto — potencial, diversidade, geração, cartel,
-   treino e as ações (cruza, reprodutor, árvore, vender). */
-function fighterFrontFace(f){
+/* Gema de estatística compacta pro card de galo: ícone + rótulo + valor numa
+   linha, barra fina embaixo. 4 gemas cabem numa grade 2×2 — muito mais curto
+   na vertical que 4 barras full-width empilhadas. */
+const STAT_ICON = { forca:'⚔️', velocidade:'💨', resistencia:'🛡️', instinto:'👁️' };
+function statGem(key, label, value, cap){
+  const pct = Math.max(0, Math.min(100, value));
+  const capMark = cap!==undefined ? `<div class="fc-gem-cap" style="left:${Math.max(0,Math.min(100,cap))}%" title="Limite genético: ${cap}"></div>` : '';
+  return `<div class="fc-stat-gem" data-stat="${key}">
+      <div class="fc-gem-head"><span class="fc-gem-icon">${STAT_ICON[key]}</span><span class="fc-gem-label">${label}</span><span class="fc-gem-val">${value}</span></div>
+      <div class="fc-gem-track">${capMark}<div class="fc-gem-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+/* Botão de ícone compacto (usado nas ações do verso — grade 2×2 em vez de
+   uma lista de botões full-width empilhados). */
+function fcIconBtn(icon, label, attrs, disabled){
+  return `<button class="fc-icon-btn" ${attrs||''} ${disabled?'disabled':''} title="${esc(label)}">
+      <span class="fc-icon-btn-ico">${icon}</span><span class="fc-icon-btn-txt">${esc(label)}</span>
+    </button>`;
+}
+
+/* --- card de galo FRENTE/VERSO, estilo "card de batalha" ---
+   Frente: moldura ornamentada com faixa de linhagem, medalhão de retrato,
+   placa de nome e grade 2×2 de atributos — tudo que o jogador quer ver de
+   relance, organizado em zonas em vez de empilhado numa coluna comprida.
+   Verso: metadados, cartel e ações (cruza, reprodutor, árvore, vender). */
+function fighterFrontFace(f, nameOverride){
   const stars = '★'.repeat(f.quality||1)+'☆'.repeat(5-(f.quality||1));
-  const displayName = esc(f.name || ('Ave #'+(f.id?f.id.slice(1,5):'?')));
-  return `${f.isPhenomenal?'<div class="fc-phenomenal">✨ FENOMENAL ✨ <span>(1 em 20.000)</span></div>':''}
-      <div class="badge-emoji">${f.gender==='M'?'🐓':'🐔'}</div>
-      <h3>${displayName}</h3>
-      <div class="fc-gender">${f.gender==='M'?'Macho':'Fêmea'}${f.isBreeder?' · ⭐ Reprodutor':''}</div>
-      <div class="fc-stars">${stars}</div>
-      <div class="fc-lineage">Linhagem ${lineageLabel(f.lineage)}</div>
-      ${statBar('Força', f.forca, f.potential?.forca)}
-      ${statBar('Velocidade', f.velocidade, f.potential?.velocidade)}
-      ${statBar('Resistência', f.resistencia, f.potential?.resistencia)}
-      ${statBar('Instinto', f.instinto, f.potential?.instinto)}`;
+  const displayName = nameOverride!==undefined ? nameOverride : esc(f.name || ('Ave #'+(f.id?f.id.slice(1,5):'?')));
+  const genderIcon = f.gender==='M' ? '🐓' : '🐔';
+  const genderLabel = f.gender==='M' ? 'Macho' : 'Fêmea';
+  return `<div class="fc-ribbon" title="Linhagem">${lineageLabel(f.lineage)}</div>
+      ${f.isPhenomenal?'<div class="fc-phenomenal-tag" title="1 em 20.000">✨ Fenomenal</div>':''}
+      <div class="fc-portrait">
+        <div class="fc-portrait-ring"><div class="fc-portrait-emoji">${genderIcon}</div></div>
+      </div>
+      <div class="fc-nameplate">
+        <h3>${displayName}</h3>
+        <div class="fc-subrow">
+          <span class="fc-gender-tag" title="${genderLabel}">${genderLabel}</span>
+          <span class="fc-stars" title="Qualidade ${f.quality||1}/5">${stars}</span>
+          ${f.isBreeder?'<span class="fc-breeder-tag" title="Reprodutor">⭐</span>':''}
+        </div>
+      </div>
+      <div class="fc-stat-grid">
+        ${statGem('forca','Força', f.forca, f.potential?.forca)}
+        ${statGem('velocidade','Veloc.', f.velocidade, f.potential?.velocidade)}
+        ${statGem('resistencia','Resist.', f.resistencia, f.potential?.resistencia)}
+        ${statGem('instinto','Instinto', f.instinto, f.potential?.instinto)}
+      </div>`;
 }
 function fighterFlipWrap(f, frontHtml, backHtml, extraCls=''){
   const lnCls = 'fc-ln-'+(f.lineage||'comum');
@@ -364,21 +396,25 @@ function viewFighters(){
       statusTxt = `<div class="desc">😴 Descansando (~${rem} min)</div>`;
     }
     const selected = (state.selectedFighterA===f.id || state.selectedFighterB===f.id);
-    const trainButtons = ['forca','velocidade','resistencia','instinto'].map(k=>{
+    const trainRow = ['forca','velocidade','resistencia','instinto'].map(k=>{
       const atCap = f[k]>=f.potential[k];
-      return `<button class="action ghost" style="font-size:.68rem;padding:5px 4px;" data-train="${f.id}|${k}" ${(resting||training||atCap)?'disabled':''} title="${atCap?'Limite genético atingido':''}">+${statLabel(k).slice(0,3)}</button>`;
+      return fcIconBtn(STAT_ICON[k], '+'+statLabel(k).slice(0,3), `data-train="${f.id}|${k}"`, resting||training||atCap);
     }).join('');
     return fighterFlipWrap(f,
       fighterFrontFace(f),
       `${fighterCardMeta(f, f.potential.forca)}
-      <div class="desc">🏆 ${f.wins}V · ${f.losses}D · Poder: ${Math.round(fighterPower(f))}</div>
+      <div class="fc-record">🏆 <b>${f.wins}</b>V · <b>${f.losses}</b>D <span class="fc-power">⚡ ${Math.round(fighterPower(f))}</span></div>
       ${statusTxt}
-      <div class="stat-row" style="gap:4px;">${trainButtons}</div>
-      <button class="action" data-select-fighter="${f.id}" ${(resting||training)?'disabled':''}>${selected?'Selecionada p/ cruza':'Selecionar p/ cruza'}</button>
-      <button class="action ghost" style="margin-top:4px;" data-toggle-breeder="${f.id}">${f.isBreeder?'⭐ Reprodutor (clique p/ desmarcar)':'☆ Marcar como Reprodutor'}</button>
-      <button class="action ghost" style="margin-top:4px;" data-genealogy="${f.id}">🌳 Árvore genealógica</button>
-      <button class="action ghost" style="margin-top:4px;" data-rename-fighter="${f.id}">✏️ Renomear</button>
-      <button class="action ghost" style="margin-top:4px;" data-sell-fighter="${f.id}">💰 Vender por ${money(fighterSellPrice(f))}</button>`,
+      <div class="fc-section-label">Treinar atributo</div>
+      <div class="fc-icon-grid">${trainRow}</div>
+      <button class="action" data-select-fighter="${f.id}" ${(resting||training)?'disabled':''}>${selected?'✅ Selecionada p/ Cruza':'Selecionar p/ Cruza'}</button>
+      <div class="fc-icon-grid">
+        ${fcIconBtn(f.isBreeder?'⭐':'☆', f.isBreeder?'Desmarcar':'Reprodutor', `data-toggle-breeder="${f.id}"`)}
+        ${fcIconBtn('🌳', 'Árvore', `data-genealogy="${f.id}"`)}
+        ${fcIconBtn('✏️', 'Renomear', `data-rename-fighter="${f.id}"`)}
+        ${fcIconBtn('💰', 'Vender', `data-sell-fighter="${f.id}"`)}
+      </div>
+      <div class="fc-sell-hint">Venda: ${money(fighterSellPrice(f))}</div>`,
       `card fighter-card ${selected?'chosen':''} ${f.isPhenomenal?'phenomenal':''}`
     );
   }).join('') || '<div class="desc">Nenhuma ave de combate adulta ainda. Compre um ovo de alguma raça abaixo.</div>';
@@ -424,7 +460,7 @@ function viewArena(){
     return fighterFlipWrap(f,
       fighterFrontFace(f),
       `${fighterCardMeta(f, f.potential.forca)}
-      <div class="desc">🏆 ${f.wins}V · ${f.losses}D · Poder: ${Math.round(fighterPower(f))}</div>
+      <div class="fc-record">🏆 <b>${f.wins}</b>V · <b>${f.losses}</b>D <span class="fc-power">⚡ ${Math.round(fighterPower(f))}</span></div>
       <button class="action danger" data-enter-arena="${f.id}">🏆 Competir</button>`,
       `card fighter-card ${f.isPhenomenal?'phenomenal':''}`
     );
@@ -492,21 +528,12 @@ function viewOnline(){
 
   const oppCards = mpCache.birds.filter(b=>!(b.ownerId && b.ownerId===mpIdentity.pubId)).map(b=>{
     const ago = Math.round((Date.now()-b.updatedAt)/60000);
-    const stars = '★'.repeat(b.quality||1)+'☆'.repeat(5-(b.quality||1));
-    const front = `${b.isPhenomenal?'<div class="fc-phenomenal">✨ FENOMENAL ✨</div>':''}
-      <div class="badge-emoji">${b.gender==='M'?'🐓':'🐔'}</div>
-      <h3>${esc(b.name?b.name+' — ':'')}${esc(b.nickname)}</h3>
-      <div class="fc-gender">${b.gender==='M'?'Macho':'Fêmea'}</div>
-      <div class="fc-stars">${stars}</div>
-      <div class="fc-lineage">Linhagem ${lineageLabel(b.lineage)}</div>
-      ${statBar('Força', b.forca)}
-      ${statBar('Velocidade', b.velocidade)}
-      ${statBar('Resistência', b.resistencia)}
-      ${statBar('Instinto', b.instinto)}`;
+    const displayName = esc(b.name?b.name+' — ':'')+esc(b.nickname);
     return fighterFlipWrap(b,
-      front,
+      fighterFrontFace(b, displayName),
       `${fighterCardMeta(b)}
-      <div class="desc">🏆 ${b.wins}V · ${b.losses}D · Poder: ${Math.round(fighterPower(b))} · atualizado há ${ago}min</div>
+      <div class="fc-record">🏆 <b>${b.wins}</b>V · <b>${b.losses}</b>D <span class="fc-power">⚡ ${Math.round(fighterPower(b))}</span></div>
+      <div class="fc-status">atualizado há ${ago}min</div>
       <button class="action danger" data-challenge-online="${esc(b._key)}" ${!state.selectedArenaFighter?'disabled':''}>🌍 Desafiar</button>`,
       `card fighter-card ${b.isPhenomenal?'phenomenal':''}`
     );
